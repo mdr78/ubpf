@@ -156,28 +156,34 @@ def serialize(parts):
 
         data = serializer(part)
         tmp.append(data)
-        #sys.stderr.write("Wrote %s size %d at offset %d\n" % (name, len(data), offset))
+        sys.stderr.write("Wrote %s size %d at offset %d\n" % (name, len(data), offset))
         offset += len(data)
 
     return b''.join(tmp)
 
-def generate_elf(pyelf):
+def generate_elf(pyelf, asm):
     parts = template()
+
+    # the testcase my override the default asm
+    if asm is not None: parts['text'] = asm
     exec(pyelf, parts)
     return serialize(parts)
 
 def check_datafile(filename):
     """
     """
+    asm = None
     data = testdata.read(filename)
     if 'pyelf' not in data:
         raise SkipTest("no pyelf section in datafile")
     if 'result' not in data and 'error' not in data and 'error pattern' not in data:
         raise SkipTest("no result or error section in datafile")
+    if 'asm' in data:
+        asm = ubpf.assembler.assemble(data['asm'])
     if not os.path.exists(VM):
         raise SkipTest("VM not found")
 
-    elf = generate_elf(data['pyelf'])
+    elf = generate_elf(data['pyelf'], asm)
 
     cmd = [VM]
 

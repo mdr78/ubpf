@@ -1,0 +1,77 @@
+-- pyelf
+#import the necessary modules
+from elftools.construct import Container
+from elftools.elf.constants import SH_FLAGS
+
+#remove references to sqrti_*
+del globals()["sqrti_sym"]
+del globals()["sqrti_rel"]
+order = order[:-2]
+
+#add asc2l and rodata to the strtab
+rodata_str = b"rodata.str1.1\0"
+strtab = strtab.replace(b"sqrti", b"asc2l") + rodata_str
+
+rodata_shdr = Container(
+                 sh_name=34,
+                 sh_type='SHT_PROGBITS',
+                 sh_flags=SH_FLAGS.SHF_ALLOC|SH_FLAGS.SHF_STRINGS|SH_FLAGS.SHF_MERGE,
+                 sh_addr=0,
+                 sh_offset=592,
+                 sh_size=5,
+                 sh_link=0,
+                 sh_info=0,
+                 sh_addralign=8,
+                 sh_entsize=0)
+order.insert(6, "rodata_shdr")
+
+asc2l_sym = Container(
+        st_name=28,
+        st_value=0,
+        st_size=0,
+        st_info=Container(bind='STB_WEAK', type='STT_FUNC'),
+        st_other=Container(local=0, visibility='STV_DEFAULT'),
+        st_shndx=0)
+order.append("asc2l_sym")
+rodata_sym = Container(
+        st_name=0,
+        st_value=0,
+        st_size=0,
+        st_info=Container(bind='STB_WEAK', type='STT_OBJECT'),
+        st_other=Container(local=0, visibility='STV_DEFAULT'),
+        st_shndx=0)
+order.append("rodata_sym")
+asc2l_rel = Container(
+        r_info=(0 << 32) | 2,
+        r_info_sym=0,
+        r_info_type=0,
+        r_offset=16)
+order.append("asc2l_rel")
+rodata_rel = Container(
+        r_info=(1 << 32) | 1,
+        r_info_sym=0,
+        r_info_type=0,
+        r_offset=0)
+order.append("rodata_rel")
+
+rodata = b"1234\0"
+order.append("rodata")
+
+text_shdr.sh_offset = 448
+text_shdr.sh_size = 32
+
+strtab_shdr.sh_offset = 480
+strtab_shdr.sh_size = 48
+
+symtab_shdr.sh_offset = 552
+symtab_shdr.sh_size = 48
+
+rel_shdr.sh_offset = 600
+rel_shdr.sh_size = 32
+
+-- asm
+lddw r1, 0x0
+call 0xffffffff
+exit
+-- result
+0x4D2

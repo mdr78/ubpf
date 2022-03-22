@@ -308,6 +308,12 @@ unwind(uint64_t i)
     return i;
 }
 
+static uint64_t
+asc2l(const char *p)
+{
+    return atoll(p);
+}
+
 static void
 register_functions(struct ubpf_vm *vm)
 {
@@ -318,4 +324,5 @@ register_functions(struct ubpf_vm *vm)
     ubpf_register(vm, 4, "strcmp_ext", strcmp);
     ubpf_register(vm, 5, "unwind", unwind);
     ubpf_set_unwind_function_index(vm, 5);
+    ubpf_register(vm, 6, "asc2l", asc2l);
 }

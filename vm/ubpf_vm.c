@@ -90,6 +90,7 @@ ubpf_destroy(struct ubpf_vm *vm)
     ubpf_unload_code(vm);
     free(vm->ext_funcs);
     free(vm->ext_func_names);
+    free(vm->rodata);
     free(vm);
 }
 
@@ -814,9 +815,17 @@ bounds_check(const struct ubpf_vm *vm, void *addr, int size, const char *type, u
     } else if (addr >= stack && ((char*)addr + size) <= ((char*)stack + UBPF_STACK_SIZE)) {
         /* Stack access */
         return true;
+    } else if (addr >= vm->rodata &&
+               ((char *)addr + size) <= ((char *)vm->rodata + vm->rodata_size)) {
+      /* Read-only data access */
+      return true;
     } else {
-        vm->error_printf(stderr, "uBPF error: out of bounds memory %s at PC %u, addr %p, size %d\nmem %p/%zd stack %p/%d\n", type, cur_pc, addr, size, mem, mem_len, stack, UBPF_STACK_SIZE);
-        return false;
+      vm->error_printf(stderr,
+                       "uBPF error: out of bounds memory %s at PC %u, addr %p, "
+                       "size %d\nmem %p/%zd stack %p/%d\n",
+                       type, cur_pc, addr, size, mem, mem_len, stack,
+                       UBPF_STACK_SIZE);
+      return false;
     }
 }
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CFLAGS := -Wall -Werror -Iinc -O2 -g -Wunused-parameter -fPIC
+CFLAGS := -Wall -Werror -Iinc -O0 -g -Wunused-parameter -fPIC
 LDLIBS := -lm
 
 INSTALL ?= install
