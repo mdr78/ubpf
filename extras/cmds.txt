@@ -1,0 +1,4 @@
+llvm-objdump -d -r --section .text -print-imm-hex prog.o
+llvm-readelf -s CMakeFiles/bpf_examples.dir/simple.c.o
+nosetests -v
+bin/ubpf-disassembler tmp/prog.o
